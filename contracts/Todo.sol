@@ -11,29 +11,38 @@ contract TodoContract {
         string author;
         bool isCompleted;
     }
-    Todo[] todos;
+    // Array wont scale ofcourse as you will need to loop through this.
+    mapping(uint256 => Todo) todos;
     uint256 todoLength;
 
     constructor() {
         todoLength = 0;
     }
 
+    // Events
+    event TaskCreated(uint256, string, string);
+
     function createTodo(string memory _content, string memory _author) public {
-        todos.push(
-            Todo({
-                id: todoLength + 1,
-                date: block.timestamp,
-                content: _content,
-                author: _author,
-                isCompleted: false
-            })
-        );
+        todos[todoLength] = Todo({
+            id: todoLength + 1,
+            date: block.timestamp,
+            content: _content,
+            author: _author,
+            isCompleted: false
+        });
+        emit TaskCreated(todoLength, _content, _author);
         todoLength += 1;
+    }
+
+    modifier isTodoExist(uint256 x) {
+        require(todos[x].id != 0, "Todo with that does not exist");
+        _;
     }
 
     function getTodo(uint256 id)
         public
         view
+        isTodoExist(id)
         returns (
             uint256,
             uint256,
@@ -49,9 +58,5 @@ contract TodoContract {
             todos[id].author,
             todos[id].isCompleted
         );
-    }
-
-    function getTodos() public view returns (Todo[] memory) {
-        return todos;
     }
 }
